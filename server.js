@@ -49,6 +49,12 @@ app.get('/api/status', (req, res) => {
   });
 });
 
+//browser check
+app.get('/', (req, res) => {
+  res.send('Server Dead Man Switch Aktif!');
+});
+
+
 // 3. Fungsi Pengirim Pesan WhatsApp via Fonnte API
 async function sendWhatsAppAlert() {
   try {
