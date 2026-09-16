@@ -11,13 +11,15 @@ app.use(express.json());
 const CHECK_IN_INTERVAL_HOURS = 24; // Batas waktu check-in (24 jam)
 
 // Masukkan Token Fonnte asli dari dashboard.fonnte.com
-const FONNTE_TOKEN = 'bkKX1KrzDY2HMpViKAcT'; 
+const FONNTE_TOKEN = 'fj9onjYfqNctNtG14Btw'; 
 
 // Nomor WhatsApp kontak darurat (Gunakan koma jika lebih dari 1, contoh: '62812345678,62898765432')
-const EMERGENCY_WA_NUMBER = '6285117356475,6283877622725'; 
+const EMERGENCY_WA_NUMBER = '6285117356475,6283877622725,6285693797906'; 
 
 // Pesan otomatis yang akan dikirim ke WhatsApp kontak darurat
 const USER_SECRET_MESSAGE = `[PESAN OTOMATIS DARURAT]
+Maafin ivi ya kalo ada salah,doain ivi trs kalo ivi bener bener udh ga ada,jangan tinggalin sholat ya.
+
 Halo, ini adalah pesan terprogram dari sistem Dead Man's Switch. 
 Pengguna sistem ini tidak melakukan check-in selama lebih dari 24 jam. Mohon segera mengecek keberadaan/kondisi pengguna.`;
 
