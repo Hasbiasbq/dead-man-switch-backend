@@ -20,7 +20,7 @@ const EMERGENCY_WA_NUMBER = '6285117356475,6283877622725,6285693797906';
 const USER_SECRET_MESSAGE = `[PESAN OTOMATIS DARURAT]
 Maafin ivi ya kalo ada salah,doain ivi trs kalo ivi bener bener udh ga ada,jangan tinggalin sholat ya.
 
-Halo, ini adalah pesan terprogram dari sistem Dead Man's Switch. 
+Halo, ini adalah pesan terprogram dari sistem yang sudah di program. 
 Pengguna sistem ini tidak melakukan check-in selama lebih dari 24 jam. Mohon segera mengecek keberadaan/kondisi pengguna.`;
 
 
