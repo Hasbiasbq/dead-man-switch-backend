@@ -12,17 +12,31 @@ const CHECK_IN_INTERVAL_HOURS = 24; // Batas waktu check-in (24 jam)
 // Masukkan Token Fonnte asli dari dashboard.fonnte.com
 const FONNTE_TOKEN = 'fj9onjYfqNctNtG14Btw'; 
 
-// Nomor WhatsApp kontak darurat (Gunakan koma jika lebih dari 1, contoh: '62812345678,62898765432')
-const EMERGENCY_WA_NUMBER = '6285117356475,6283877622725,6285693797906'; 
+// DAFTAR KONTAK DARURAT (Tambah/edit nomor WA & nama penerima di sini)
+const EMERGENCY_CONTACTS = [
+  { 
+    name: 'ipiii', 
+    waNumber: '6285117356475', 
+    secretMessage: 'Nt sudah sejauh ini berjuang'
+  },
+ 
+];
 
 // Pesan otomatis yang akan dikirim ke WhatsApp kontak darurat
-const USER_SECRET_MESSAGE = `[PESAN OTOMATIS DARURAT]
-Maafin ivi ya kalo ada salah,doain ivi trs kalo ivi bener bener udh ga ada,jangan tinggalin sholat ya.
+// const USER_SECRET_MESSAGE = `[PESAN OTOMATIS DARURAT]
+//Maafin ivi ya kalo ada salah,doain ivi trs kalo ivi bener bener udh ga ada,jangan tinggalin sholat ya.
 
-Halo, ini adalah pesan terprogram dari sistem yang sudah di program. 
-Pengguna sistem ini tidak melakukan checkin di waktu yang telah di set. Mohon segera mengecek keberadaan/kondisi pengguna.`;
+//Halo, ini adalah pesan terprogram dari sistem yang sudah di program. 
+// Pengguna sistem ini tidak melakukan checkin di waktu yang telah di set. Mohon segera mengecek keberadaan/kondisi pengguna.`;
 
+// FUNGSI TEMPLATE PESAN UTAMA (Mencampurkan pesan personal + template penutup)
+const getEmergencyMessage = (contact) => {
+  return `[PESAN OTOMATIS DARURAT]
+${contact.secretMessage}
 
+Halo , ini adalah pesan terprogram dari sistem yang sudah diprogram. 
+Pengguna sistem ini tidak melakukan check-in di waktu yang telah di-set. Mohon segera mengecek keberadaan/kondisi pengguna.`;
+}; 
 // =========================================================
 // STATE SIMPANAN
 // =========================================================
@@ -53,11 +67,11 @@ app.get('/', (req, res) => {
   res.send('Server Dead Man Switch Aktif!');
 });
 
-// 3. Fungsi Pengirim Pesan WhatsApp via Fonnte API
-async function sendWhatsAppAlert() {
+// 3. Fungsi Pengirim Pesan WhatsApp ke 1 Nomor
+async function sendFonnteWA(waNumber) {
   try {
     const params = new URLSearchParams();
-    params.append('target', EMERGENCY_WA_NUMBER);
+    params.append('target', waNumber);
     params.append('message', USER_SECRET_MESSAGE);
     params.append('countryCode', '62');
 
@@ -72,13 +86,20 @@ async function sendWhatsAppAlert() {
       }
     );
 
-    console.log("Pesan WhatsApp darurat berhasil dikirim:", response.data);
-    isMessageSent = true;
+    console.log(`[WA] Pesan darurat berhasil dikirim ke ${waNumber}:`, response.data);
     return true;
   } catch (error) {
-    console.error("Gagal mengirim pesan WhatsApp:", error.response ? error.response.data : error.message);
+    console.error(`[WA] Gagal mengirim ke ${waNumber}:`, error.response ? error.response.data : error.message);
     return false;
   }
+}
+
+// Fungsi Broadcast ke SELURUH Kontak di Array
+async function broadcastWhatsAppAlerts() {
+  const sendPromises = EMERGENCY_CONTACTS.map(contact => sendFonnteWA(contact.waNumber));
+  const results = await Promise.all(sendPromises);
+  // Mengembalikan true jika minimal ada 1 nomor yang berhasil terkirim
+  return results.some(status => status === true);
 }
 
 // 4. Endpoint Khusus Pemicu Cron Job (Dipanggil Vercel Cron / Cron-job.org)
@@ -98,13 +119,14 @@ app.get('/api/cron-check', async (req, res) => {
 
   // Jika selisih waktu sudah melebihi batas (24 jam)
   if (diffInHours >= CHECK_IN_INTERVAL_HOURS) {
-    console.log("PERINGATAN: Pengguna tidak check-in melebihi batas waktu! Mengirim WhatsApp...");
-    const success = await sendWhatsAppAlert();
+    console.log("PERINGATAN: Pengguna tidak check-in melebihi batas waktu! Mengirim WhatsApp ke semua kontak...");
+    const success = await broadcastWhatsAppAlerts();
     
     if (success) {
+      isMessageSent = true;
       return res.json({ 
         status: "triggered", 
-        message: "Pesan WhatsApp darurat BERHASIL dikirim via Fonnte!",
+        message: "Pesan WhatsApp darurat BERHASIL dikirim ke seluruh kontak via Fonnte!",
         hoursPassed: diffInHours.toFixed(2)
       });
     } else {
