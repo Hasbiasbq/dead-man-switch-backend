@@ -7,13 +7,13 @@ app.use(express.json());
 // =========================================================
 // KONFIGURASI PRODUCTION
 // =========================================================
-const CHECK_IN_INTERVAL_HOURS = 0; // Batas waktu check-in (24 jam)
+const CHECK_IN_INTERVAL_HOURS = 24; // Batas waktu check-in (24 jam)
 
 // Masukkan Token Fonnte asli dari dashboard.fonnte.com
 const FONNTE_TOKEN = 'fj9onjYfqNctNtG14Btw'; 
 
 // Nomor WhatsApp kontak darurat (Gunakan koma jika lebih dari 1, contoh: '62812345678,62898765432')
-const EMERGENCY_WA_NUMBER = '6285117356475,6287778226475'; 
+const EMERGENCY_WA_NUMBER = '6285117356475,6283877622725,6285693797906'; 
 
 // Pesan otomatis yang akan dikirim ke WhatsApp kontak darurat
 const USER_SECRET_MESSAGE = `[PESAN OTOMATIS DARURAT]
