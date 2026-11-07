@@ -16,21 +16,7 @@ const EMERGENCY_CONTACTS = [
     waNumber: '6285117356475', 
     secretMessage: 'Nt sudah sejauh ini berjuang'
   },
-  { 
-    name: 'Mama', 
-    waNumber: '6283877622725', 
-    secretMessage: 'Maafin ivi kalo ada salah ya mah,doain ivi terus ya kalo bener bener udah ga ada'
-  },
-  { 
-    name: 'Afifah', 
-    waNumber: '6285693797906', 
-    secretMessage: 'Maafin gua ya nong,Titip enda ya,jagain enda,doain gua terus ya kalo gua bener bener ga ada'
-  },
-  { 
-    name: 'Syafiq', 
-    waNumber: '6285718166617', 
-    secretMessage: 'Jagain nda ya fik,maafin gua kalo ada salah,bilangin nda gua sayang bgt sma enda & papah'
-  }
+
 ];
 
 // FUNGSI TEMPLATE PESAN UTAMA (Personalisasi Nama + Secret Message)
