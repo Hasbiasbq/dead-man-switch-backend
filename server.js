@@ -7,7 +7,7 @@ app.use(express.json());
 // =========================================================
 // KONFIGURASI PRODUCTION
 // =========================================================
-const CHECK_IN_INTERVAL_HOURS = 24; // Batas waktu check-in (24 jam)
+const CHECK_IN_INTERVAL_HOURS = 0; // Batas waktu check-in (24 jam)
 
 // Masukkan Token Fonnte asli dari dashboard.fonnte.com
 const FONNTE_TOKEN = 'fj9onjYfqNctNtG14Btw'; 
