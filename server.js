@@ -1,5 +1,4 @@
 const express = require('express');
-const cron = require('node-cron');
 const axios = require('axios');
 
 const app = express();
@@ -41,7 +40,7 @@ app.post('/api/checkin', (req, res) => {
 // 2. Endpoint API untuk Cek Status (Berguna untuk pemantauan dari iOS/Watch)
 app.get('/api/status', (req, res) => {
   const now = new Date();
-  const diffInHours = (now - lastCheckIn) / (1000 * 60 * 60);
+  const diffInHours = (now - new Date(lastCheckIn)) / (1000 * 60 * 60);
   res.json({
     lastCheckIn,
     hoursPassed: diffInHours.toFixed(2),
@@ -49,11 +48,10 @@ app.get('/api/status', (req, res) => {
   });
 });
 
-//browser check
+// Browser check
 app.get('/', (req, res) => {
   res.send('Server Dead Man Switch Aktif!');
 });
-
 
 // 3. Fungsi Pengirim Pesan WhatsApp via Fonnte API
 async function sendWhatsAppAlert() {
@@ -76,29 +74,61 @@ async function sendWhatsAppAlert() {
 
     console.log("Pesan WhatsApp darurat berhasil dikirim:", response.data);
     isMessageSent = true;
+    return true;
   } catch (error) {
     console.error("Gagal mengirim pesan WhatsApp:", error.response ? error.response.data : error.message);
+    return false;
   }
 }
 
-// 4. Cron Job: Pengecekan otomatis setiap jam (pada menit ke-0)
-cron.schedule('0 * * * *', async () => {
-  if (isMessageSent) return; // Jika pesan sudah terkirim, tidak perlu kirim ulang
-
+// 4. Endpoint Khusus Pemicu Cron Job (Dipanggil Vercel Cron / Cron-job.org)
+app.get('/api/cron-check', async (req, res) => {
   const now = new Date();
-  const diffInHours = (now - lastCheckIn) / (1000 * 60 * 60);
+  const diffInHours = (now - new Date(lastCheckIn)) / (1000 * 60 * 60);
 
-  console.log(`[Cron Job] Pengecekan rutin... Selisih waktu check-in terakhir: ${diffInHours.toFixed(2)} jam`);
+  console.log(`[Cron Trigger] Selisih waktu check-in: ${diffInHours.toFixed(2)} jam`);
+
+  if (isMessageSent) {
+    return res.json({ 
+      status: "skipped", 
+      message: "Pesan darurat sudah pernah terkirim sebelumnya.",
+      hoursPassed: diffInHours.toFixed(2)
+    });
+  }
 
   // Jika selisih waktu sudah melebihi batas (24 jam)
   if (diffInHours >= CHECK_IN_INTERVAL_HOURS) {
     console.log("PERINGATAN: Pengguna tidak check-in melebihi batas waktu! Mengirim WhatsApp...");
-    await sendWhatsAppAlert();
+    const success = await sendWhatsAppAlert();
+    
+    if (success) {
+      return res.json({ 
+        status: "triggered", 
+        message: "Pesan WhatsApp darurat BERHASIL dikirim via Fonnte!",
+        hoursPassed: diffInHours.toFixed(2)
+      });
+    } else {
+      return res.status(500).json({ 
+        status: "error", 
+        message: "Gagal menguji/mengirim pesan WA via Fonnte." 
+      });
+    }
   }
+
+  return res.json({ 
+    status: "ok", 
+    message: "Status aman, belum melewati batas waktu check-in.",
+    hoursPassed: diffInHours.toFixed(2)
+  });
 });
 
-// Jalankan Server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server Dead Man's Switch berjalan di port ${PORT}`);
-});
+// Export app khusus untuk deployment Vercel Serverless
+module.exports = app;
+
+// Jalankan Server jika di-run secara lokal (bukan di Vercel)
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`Server Dead Man's Switch berjalan di port ${PORT}`);
+  });
+}
