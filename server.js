@@ -8,7 +8,8 @@ app.use(express.json());
 // KONFIGURASI PRODUCTION
 // =========================================================
 const FONNTE_TOKEN = 'fj9onjYfqNctNtG14Btw'; 
-
+const CHECK_IN_INTERVAL_HOURS = 0;
+ 
 // DAFTAR KONTAK DARURAT
 const EMERGENCY_CONTACTS = [
   { 
