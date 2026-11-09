@@ -7,24 +7,29 @@ app.use(express.json());
 // =========================================================
 // KONFIGURASI PRODUCTION
 // =========================================================
+// 💡 Kalo mau tes trigger WA langsung: ubah 24 jadi 0
+// 💡 Kalo udah selesai tes: balikin lagi jadi 24
+const CHECK_IN_INTERVAL_HOURS = 0; 
+
+// Token Fonnte asli
 const FONNTE_TOKEN = 'fj9onjYfqNctNtG14Btw'; 
-const CHECK_IN_INTERVAL_HOURS = 0;
- 
+
 // DAFTAR KONTAK DARURAT
+// ⚠️ Pastikan waNumber formatnya 628xxx (bukan nomor pendek/typo)
 const EMERGENCY_CONTACTS = [
   { 
     name: 'ipiii', 
-    waNumber: '6285117356475', 
+    waNumber: '6287778226475', 
     secretMessage: 'Nt sudah sejauh ini berjuang'
   },
   { 
     name: 'Mama', 
-    waNumber: '6283877622725', 
+    waNumber: '6283898936475', 
     secretMessage: 'Maafin ivi kalo ada salah ya mah,doain ivi terus ya kalo bener bener udah ga ada'
   },
   { 
     name: 'Afifah', 
-    waNumber: '6285693797906', 
+    waNumber: '628569373797906', 
     secretMessage: 'Maafin gua ya nong,Titip enda ya,jagain enda,doain gua terus ya kalo gua bener bener ga ada'
   },
   { 
@@ -34,13 +39,13 @@ const EMERGENCY_CONTACTS = [
   }
 ];
 
-// FUNGSI TEMPLATE PESAN UTAMA (Personalisasi Nama + Secret Message)
+// FUNGSI TEMPLATE PESAN UTAMA
 const getEmergencyMessage = (contact) => {
   return `[PESAN OTOMATIS DARURAT]
 ${contact.secretMessage}
 
-Halo, ini adalah pesan terprogram dari sistem yang sudah diprogram. 
-Pengguna sistem ini tidak melakukan check-in di waktu yang telah di-set. Mohon segera mengecek keberadaan dan kondisinya.`;
+Halo ${contact.name}, ini adalah pesan terprogram dari sistem yang sudah diprogram. 
+Pengguna sistem ini tidak melakukan check-in di waktu yang telah di-set. Mohon segera mengecek keberadaan/kondisi pengguna.`;
 }; 
 
 // =========================================================
@@ -49,15 +54,15 @@ Pengguna sistem ini tidak melakukan check-in di waktu yang telah di-set. Mohon s
 let lastCheckIn = new Date();
 let isMessageSent = false;
 
-// 1. Endpoint API Check-in (Dipanggil dari iPhone / Apple Watch)
+// 1. Endpoint API Check-in (iPhone / Apple Watch)
 app.post('/api/checkin', (req, res) => {
   lastCheckIn = new Date();
-  isMessageSent = false; // Reset status pengiriman saat check-in baru
+  isMessageSent = false;
   console.log(`[${new Date().toISOString()}] Check-in berhasil tercatat!`);
   res.json({ success: true, message: "Check-in berhasil tercatat.", lastCheckIn });
 });
 
-// 2. Endpoint API Status (Pemantauan sistem)
+// 2. Endpoint API Status
 app.get('/api/status', (req, res) => {
   const now = new Date();
   const diffInHours = (now - new Date(lastCheckIn)) / (1000 * 60 * 60);
@@ -95,45 +100,41 @@ async function sendFonnteWA(contact) {
       }
     );
 
-    console.log(`[WA] Pesan darurat berhasil dikirim ke ${contact.name} (${contact.waNumber}):`, response.data);
+    console.log(`[WA] Berhasil kirim ke ${contact.name} (${contact.waNumber}):`, response.data);
     return { success: true, contact: contact.name, target: contact.waNumber, response: response.data };
   } catch (error) {
     const errorData = error.response ? error.response.data : error.message;
-    console.error(`[WA] Gagal mengirim ke ${contact.name} (${contact.waNumber}):`, errorData);
+    console.error(`[WA] Gagal kirim ke ${contact.name} (${contact.waNumber}):`, errorData);
     return { success: false, contact: contact.name, target: contact.waNumber, error: errorData };
   }
 }
 
-// Broadcast ke SELURUH Kontak di Array
+// Broadcast ke seluruh kontak
 async function broadcastWhatsAppAlerts() {
   const sendPromises = EMERGENCY_CONTACTS.map(contact => sendFonnteWA(contact));
   return await Promise.all(sendPromises);
 }
 
 // =========================================================
-// 3. ENDPOINT CRON CHECK (Otomatis Pengecekan Hari Ini / 22:30 WIB)
+// 3. ENDPOINT CRON CHECK (Cek Batas Interval Jam)
 // =========================================================
 app.get('/api/cron-check', async (req, res) => {
   const now = new Date();
-  
-  // Ambil tanggal WIB (UTC+7)
-  const wibOffset = 7 * 60 * 60 * 1000;
-  const todayWIB = new Date(now.getTime() + wibOffset).toISOString().split('T')[0];
-  const lastCheckInWIB = new Date(new Date(lastCheckIn).getTime() + wibOffset).toISOString().split('T')[0];
+  const diffInHours = (now - new Date(lastCheckIn)) / (1000 * 60 * 60);
 
-  const hasCheckedInToday = (todayWIB === lastCheckInWIB);
+  console.log(`[Cron Trigger] Selisih waktu check-in: ${diffInHours.toFixed(2)} jam`);
 
   if (isMessageSent) {
     return res.json({ 
       status: "skipped", 
-      message: "Pesan darurat hari ini sudah pernah terkirim sebelumnya.",
-      hasCheckedInToday
+      message: "Pesan darurat sudah pernah terkirim sebelumnya.",
+      hoursPassed: diffInHours.toFixed(2)
     });
   }
 
-  // Jika belum check-in hari ini saat cron jam 22:30 WIB tersentuh:
-  if (!hasCheckedInToday) {
-    console.log("PERINGATAN: Belum check-in hari ini jam 22:30 WIB! Mengirim WA...");
+  // Jika selisih waktu sudah melebihi CHECK_IN_INTERVAL_HOURS
+  if (diffInHours >= CHECK_IN_INTERVAL_HOURS) {
+    console.log("PERINGATAN: Melewati batas waktu check-in! Mengirim WA...");
     const results = await broadcastWhatsAppAlerts();
     const hasSuccess = results.some(r => r.success === true);
 
@@ -142,52 +143,28 @@ app.get('/api/cron-check', async (req, res) => {
       return res.json({ 
         status: "triggered", 
         message: "Pesan WA darurat BERHASIL dikirim ke seluruh kontak!",
-        details: results
+        details: results,
+        hoursPassed: diffInHours.toFixed(2)
       });
     } else {
       return res.status(500).json({ 
         status: "error", 
         message: "Gagal mengirim pesan WA via Fonnte.",
-        fonnte_details: results
+        fonnte_details: results,
+        hoursPassed: diffInHours.toFixed(2)
       });
     }
   }
 
   return res.json({ 
     status: "ok", 
-    message: "Status aman, kamu sudah check-in hari ini.",
-    hasCheckedInToday: true
+    message: "Status aman, belum melewati batas waktu check-in.",
+    hoursPassed: diffInHours.toFixed(2)
   });
 });
 
-// =========================================================
-// 4. ENDPOINT TEST TRIGGER MANUAL (Kapan saja via browser)
-// =========================================================
-app.get('/api/test-trigger', async (req, res) => {
-  console.log("[TEST TRIGGER] Menjalankan tes pengiriman WA manual...");
-
-  const results = await broadcastWhatsAppAlerts();
-  const hasSuccess = results.some(r => r.success === true);
-
-  if (hasSuccess) {
-    return res.json({
-      status: "test_success",
-      message: "Uji coba pengiriman WA darurat BERHASIL ke kontak!",
-      details: results
-    });
-  } else {
-    return res.status(500).json({
-      status: "test_failed",
-      message: "Uji coba pengiriman WA GAGAL.",
-      fonnte_details: results
-    });
-  }
-});
-
-// Export app khusus untuk deployment Vercel Serverless
 module.exports = app;
 
-// Jalankan Server jika di-run secara lokal (bukan di Vercel)
 if (process.env.NODE_ENV !== 'production') {
   const PORT = process.env.PORT || 3000;
   app.listen(PORT, () => {
