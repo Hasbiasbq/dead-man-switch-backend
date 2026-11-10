@@ -29,14 +29,11 @@ const EMERGENCY_CONTACTS = [
   },
   { 
     name: 'Afifah', 
-    waNumber: '628569373797906', 
+    waNumber: '628569376797906', 
     secretMessage: 'Maafin gua ya nong,Titip enda ya,jagain enda,doain gua terus ya kalo gua bener bener ga ada'
   },
-  { 
-    name: 'Syafiq', 
-    waNumber: '6285718166617', 
-    secretMessage: 'Jagain nda ya fik,maafin gua kalo ada salah,bilangin nda gua sayang bgt sma enda & papah'
-  }
+  
+  
 ];
 
 // FUNGSI TEMPLATE PESAN UTAMA
