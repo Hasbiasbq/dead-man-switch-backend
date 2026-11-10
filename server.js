@@ -23,11 +23,6 @@ const EMERGENCY_CONTACTS = [
     secretMessage: 'Nt sudah sejauh ini berjuang'
   },
   { 
-    name: 'Mama', 
-    waNumber: '6283898936475', 
-    secretMessage: 'Maafin ivi kalo ada salah ya mah,doain ivi terus ya kalo bener bener udah ga ada'
-  },
-  { 
     name: 'Afifah', 
     waNumber: '628569376797906', 
     secretMessage: 'Maafin gua ya nong,Titip enda ya,jagain enda,doain gua terus ya kalo gua bener bener ga ada'
@@ -41,7 +36,7 @@ const getEmergencyMessage = (contact) => {
   return `[PESAN OTOMATIS DARURAT]
 ${contact.secretMessage}
 
-Halo ${contact.name}, ini adalah pesan terprogram dari sistem yang sudah diprogram. 
+Halo , ini adalah pesan terprogram dari sistem yang sudah diprogram. 
 Pengguna sistem ini tidak melakukan check-in di waktu yang telah di-set. Mohon segera mengecek keberadaan/kondisi pengguna.`;
 }; 
 
