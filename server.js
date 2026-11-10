@@ -9,7 +9,7 @@ app.use(express.json());
 // =========================================================
 // 💡 Kalo mau tes trigger WA langsung: ubah 24 jadi 0
 // 💡 Kalo udah selesai tes: balikin lagi jadi 24
-const CHECK_IN_INTERVAL_HOURS = 0; 
+const CHECK_IN_INTERVAL_HOURS = 24; 
 
 // Token Fonnte asli
 const FONNTE_TOKEN = 'fj9onjYfqNctNtG14Btw'; 
