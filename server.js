@@ -24,7 +24,7 @@ const EMERGENCY_CONTACTS = [
   },
   { 
     name: 'Afifah', 
-    waNumber: '628569379797906', 
+    waNumber: '6285693797906', 
     secretMessage: 'Maafin gua ya nong,Titip enda ya,jagain enda,doain gua terus ya kalo gua bener bener ga ada'
   },
   
